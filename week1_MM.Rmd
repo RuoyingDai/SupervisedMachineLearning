@@ -1,0 +1,54 @@
+---
+title: "WEEK 1 MM"
+author: "Ruoying DAI"
+date: "2020/10/27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Load Data
+load('D:/BDS/2SML/week1_MM_SubsetSelection/Advertising.Rdata')
+
+y <- as.vector(Advertising[,4])
+
+X <- as.matrix(Advertising[, 1:3])
+
+lmbeta <- lm(y~X)
+
+X <- cbind(rep(1, nrow(X)), X)
+
+rm(Advertising)
+
+## Set lambda to the largerst eigenvalue of X
+
+lambda = max(Re(eigen(t(X) %*% X)$values)) #Re() takes the real part of the complex number
+
+## Initialize beta_0 and k
+beta_0 <- as.vector(c(0.5, 0.5, 0.5, 0.5))
+
+lambda_inv <- solve(lambda, diag(1))[1]
+
+beta_0 <- beta_0 - lambda_inv * t(X) %*% X %*% beta_0 + lambda_inv * t(X) %*% y
+
+k <- 1
+
+epsilon <-10 **-6
+
+RSS_0 <-  t(y- X%*%beta_0)%*%(y- X%*%beta_0)
+
+## Loop until beta is nearly constant
+
+while (k == 1 | epsilon >= 10**-6) {
+  k <- k+1
+  beta_hat <- beta_0 - lambda_inv * t(X) %*% X %*% beta_0 + lambda_inv * t(X) %*% y
+  RSS_new <- t(y- X%*%beta_hat)%*%(y- X%*%beta_hat)
+  epsilon <- (RSS_0 - RSS_new)/RSS_0
+  sprintf("k is %s",k)
+  sprintf("RSS_k-1 is %s", RSS_0)
+  sprintf("RSS_k is %s", RSS_new)
+  sprintf("Their difference is %s", RSS_0 - RSS_new)
+  RSS_0 <- RSS_new
+  beta_0 <- beta_hat  
+}
